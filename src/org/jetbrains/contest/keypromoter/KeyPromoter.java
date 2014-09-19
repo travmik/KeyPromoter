@@ -1,6 +1,27 @@
 package org.jetbrains.contest.keypromoter;
 
-import com.intellij.openapi.actionSystem.*;
+import java.awt.AWTEvent;
+import java.awt.Component;
+import java.awt.Event;
+import java.awt.Toolkit;
+import java.awt.event.AWTEventListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowEvent;
+import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JMenuItem;
+import javax.swing.JWindow;
+import javax.swing.SwingUtilities;
+
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.actionSystem.impl.ActionButton;
 import com.intellij.openapi.actionSystem.impl.ActionMenuItem;
 import com.intellij.openapi.actionSystem.impl.actionholder.ActionRef;
@@ -12,17 +33,8 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.wm.impl.IdeFrameImpl;
 import com.intellij.openapi.wm.impl.StripeButton;
 import com.intellij.util.Alarm;
-import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.AWTEventListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowEvent;
-import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Date: 04.09.2006
@@ -31,49 +43,56 @@ import java.util.Map;
 public class KeyPromoter implements ApplicationComponent, AWTEventListener {
 
     // Fields with actions of supported classes
-    private Map<Class, Field> myClassFields = new HashMap<Class, Field>(5);
+    private final Map<Class, Field> myClassFields = new HashMap<Class, Field>(5);
 
     // DataContext field to get frame on Mac for example
     private Field myMenuItemDataContextField;
     private KeyPromoterSettings mySettings;
 
     // Alarm object to perform animation effects
-    private Alarm myAlarm = new Alarm(Alarm.ThreadToUse.SHARED_THREAD);
+    private final Alarm myAlarm = new Alarm(Alarm.ThreadToUse.SHARED_THREAD);
 
     // Presentation and stats fields.
     private JWindow myTipWindow;
-    private Map<String, Integer> stats = Collections.synchronizedMap(new HashMap<String, Integer>());
-    private Map<String, Integer> withoutShortcutStats = Collections.synchronizedMap(new HashMap<String, Integer>());
+    private final Map<String, Integer> stats = Collections.synchronizedMap(new HashMap<String, Integer>());
+    private final Map<String, Integer> withoutShortcutStats = Collections.synchronizedMap(new HashMap<String, Integer>());
 
+    @Override
     public void initComponent() {
-        Toolkit.getDefaultToolkit().addAWTEventListener(this, AWTEvent.MOUSE_EVENT_MASK | AWTEvent.WINDOW_EVENT_MASK | AWTEvent.WINDOW_STATE_EVENT_MASK/* | AWTEvent.KEY_EVENT_MASK*/);
-        KeyPromoterConfiguration component = ApplicationManager.getApplication().getComponent(KeyPromoterConfiguration.class);
+        Toolkit.getDefaultToolkit().addAWTEventListener(this, AWTEvent.MOUSE_EVENT_MASK
+                | AWTEvent.WINDOW_EVENT_MASK | AWTEvent.WINDOW_STATE_EVENT_MASK/* | AWTEvent.KEY_EVENT_MASK*/);
+//        final KeyPromoterConfiguration component = ServiceManager.getService(KeyPromoterConfiguration.class);
+        final KeyPromoterConfiguration component =
+                ApplicationManager.getApplication().getComponent(KeyPromoterConfiguration.class);
         mySettings = component.getSettings();
 
         // DataContext field to get frame on Mac for example
         myMenuItemDataContextField = KeyPromoterUtils.getFieldOfType(ActionMenuItem.class, DataContext.class);
     }
 
+    @Override
     public void disposeComponent() {
         Toolkit.getDefaultToolkit().removeAWTEventListener(this);
     }
 
     @NotNull
+    @Override
     public String getComponentName() {
         return "KeyPromoter";
     }
 
     // AWT magic
-    public void eventDispatched(AWTEvent e) {
-        if (e.getID() == MouseEvent.MOUSE_RELEASED && ((MouseEvent) e).getButton() == MouseEvent.BUTTON1) {
-            handleMouseEvent(e);
+    @Override
+    public void eventDispatched(final AWTEvent event) {
+        if (event.getID() == MouseEvent.MOUSE_RELEASED && ((MouseEvent) event).getButton() == MouseEvent.BUTTON1) {
+            handleMouseEvent(event);
 
-        } else if (e.getID() == WindowEvent.WINDOW_ACTIVATED | e.getID() == Event.WINDOW_MOVED) {
-            handleWindowEvent(e);
+        } else if (event.getID() == WindowEvent.WINDOW_ACTIVATED | event.getID() == Event.WINDOW_MOVED) {
+            handleWindowEvent();
         }
     }
 
-    private void handleWindowEvent(AWTEvent e) {
+    private void handleWindowEvent() {
         // To paint tip over dialogs
         if (myTipWindow != null && myTipWindow.isVisible()) {
             myTipWindow.setVisible(false);
@@ -82,8 +101,8 @@ public class KeyPromoter implements ApplicationComponent, AWTEventListener {
         }
     }
 
-    private void handleMouseEvent(AWTEvent e) {
-        final Object source = e.getSource();
+    private void handleMouseEvent(final AWTEvent event) {
+        final Object source = event.getSource();
         String shortcutText = "";
         String description = "";
 
@@ -92,13 +111,13 @@ public class KeyPromoter implements ApplicationComponent, AWTEventListener {
 
         if (mySettings.isToolWindowButtonsEnabled() && source instanceof StripeButton) {
             // This is hack!!!
-            char mnemonic = ((char) ((StripeButton) source).getMnemonic2());
+            final char mnemonic = ((char) ((StripeButton) source).getMnemonic2());
             if (mnemonic >= '0' && mnemonic <= '9') {
                 shortcutText = "Alt+" + mnemonic;
                 description = ((StripeButton) source).getText();
             }
         } else if (mySettings.isAllButtonsEnabled() && source instanceof JButton) {
-            char mnemonic = ((char) ((JButton) source).getMnemonic());
+            final char mnemonic = ((char) ((JButton) source).getMnemonic());
             if (mnemonic > 0) {
                 // Not respecting Mac Meta key yet
                 shortcutText = "Alt+" + mnemonic;
@@ -118,14 +137,14 @@ public class KeyPromoter implements ApplicationComponent, AWTEventListener {
             try {
                 if ((mySettings.isMenusEnabled() && source instanceof ActionMenuItem) ||
                         (mySettings.isToolbarButtonsEnabled() && source instanceof ActionButton)) {
-                    Object actionItem = field.get(source);
+                    final Object actionItem = field.get(source);
                     if (actionItem instanceof AnAction) {
                         anAction = (AnAction) actionItem;
                     } else if (actionItem instanceof ActionRef) {
                         anAction = ((ActionRef) actionItem).getAction();
                     }
                 }
-            } catch (IllegalAccessException e1) {
+            } catch (final IllegalAccessException exc) {
                 // it is bad but ...
             }
             if (anAction != null && anAction.getShortcutSet() != null) {
@@ -134,13 +153,14 @@ public class KeyPromoter implements ApplicationComponent, AWTEventListener {
             }
         }
 
-        handle(e, shortcutText, description, anAction);
+        handle(event, shortcutText, description, anAction);
     }
 
-    private void handle(final AWTEvent e, String shortcutText, String description, AnAction anAction) {
-        Object source = e.getSource();
+    private void handle(final AWTEvent event, final String shortcutText,final  String description,
+                        final AnAction anAction) {
+        final Object source = event.getSource();
         // Get current frame, not sure that it respects API
-        JFrame frame = getFrame(source);
+        final JFrame frame = getFrame(source);
         if (frame == null) {
             return;
         }
@@ -152,11 +172,11 @@ public class KeyPromoter implements ApplicationComponent, AWTEventListener {
 
             // Write shortcut to the brain card
 
-            showTip(frame, e, KeyPromoterUtils.renderMessage(description, shortcutText, stats.get(shortcutText)));
+            showTip(frame, event, KeyPromoterUtils.renderMessage(description, shortcutText, stats.get(shortcutText)));
         } else {
             // Suggest to assign shortcut ot action without shortcut or record such action invocation
             if (anAction != null) {
-                String id = ActionManager.getInstance().getId(anAction);
+                final String id = ActionManager.getInstance().getId(anAction);
                 if (id != null) {
                     if (withoutShortcutStats.get(id) == null) {
                         withoutShortcutStats.put(id, 0);
@@ -167,9 +187,11 @@ public class KeyPromoter implements ApplicationComponent, AWTEventListener {
                         if (StringUtil.isEmpty(actionLabel)) {
                             actionLabel = anAction.getTemplatePresentation().getText();
                         }
-                        if (Messages.showYesNoDialog(frame, "Would you like to assign shortcut to '" + actionLabel + "' action cause we noticed it was used " + withoutShortcutStats.get(id) + " time(s) by mouse?",
-                                "[KeyPromoter said]: Keyboard usage more productive!", Messages.getQuestionIcon()) == 0) {
-                            EditKeymapsDialog dialog = new EditKeymapsDialog(((IdeFrameImpl) frame).getProject(), id);
+                       final String message = String.format(KeyPromoterUtils.SUGGESTION_MESSAGE,
+                                actionLabel,withoutShortcutStats.get(id));
+                        if (Messages.showYesNoDialog(frame, message, KeyPromoterUtils.SUGGESTION_TITLE,
+                                Messages.getQuestionIcon()) == 0) {
+                            final EditKeymapsDialog dialog = new EditKeymapsDialog(((IdeFrameImpl) frame).getProject(), id);
                             dialog.show();
                         }
                     }
@@ -178,7 +200,7 @@ public class KeyPromoter implements ApplicationComponent, AWTEventListener {
         }
     }
 
-    private void showTip(JFrame frame, AWTEvent e, String text) {
+    private void showTip(final JFrame frame, final AWTEvent event, final String text) {
 
         // Interrupt any pending requests
         myAlarm.cancelAllRequests();
@@ -188,7 +210,7 @@ public class KeyPromoter implements ApplicationComponent, AWTEventListener {
             myTipWindow.dispose();
             myTipWindow = null;
         }
-        myTipWindow = new TipWindow(frame, text, (Component) e.getSource());
+        myTipWindow = new TipWindow(frame, text, (Component) event.getSource());
         myTipWindow.setVisible(true);
 
         final int[] stepsCount = new int[]{1};
@@ -202,7 +224,7 @@ public class KeyPromoter implements ApplicationComponent, AWTEventListener {
         // Repainting with specified delay and steps count
         final int stepDuration1 = stepDuration;
         myAlarm.addRequest(new Runnable() {
-
+            @Override
             public void run() {
                 myTipWindow.repaint();
                 if (stepsCount[0]-- > 0) {
@@ -216,18 +238,18 @@ public class KeyPromoter implements ApplicationComponent, AWTEventListener {
         }, stepDuration);
     }
 
-    private JFrame getFrame(Object source) {
+    private JFrame getFrame(final Object source) {
         JFrame frame = (JFrame) SwingUtilities.getAncestorOfClass(JFrame.class, (Component) source);
         if (frame == null) {
             // On Mac menus detached from main frame :(
             if (source instanceof JMenuItem) {
                 try {
-                    DataContext dataContext = (DataContext) myMenuItemDataContextField.get(source);
+                    final DataContext dataContext = (DataContext) myMenuItemDataContextField.get(source);
                     if (dataContext != null) {
-                        Component component = (Component) dataContext.getData(PlatformDataKeys.CONTEXT_COMPONENT.getName());
+                        final Component component = (Component) dataContext.getData(PlatformDataKeys.CONTEXT_COMPONENT.getName());
                         frame = (JFrame) SwingUtilities.getAncestorOfClass(JFrame.class, component);
                     }
-                } catch (Exception e1) {
+                } catch (final Exception exc) {
                     // it is bad but ...
                 }
             }

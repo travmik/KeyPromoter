@@ -1,5 +1,17 @@
 package org.jetbrains.contest.keypromoter;
 
+import java.awt.Dimension;
+import java.awt.Insets;
+
+import javax.swing.BorderFactory;
+import javax.swing.JCheckBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
+import javax.swing.JTextPane;
+
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
@@ -11,12 +23,10 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import com.intellij.util.xmlb.XmlSerializerUtil;
+
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import javax.swing.*;
-import java.awt.*;
 
 
 /**
@@ -32,7 +42,7 @@ import java.awt.*;
       id = "KeyPromoterConfiguration"
     )}
 )
-public class KeyPromoterConfiguration extends BaseConfigurable implements SearchableConfigurable, PersistentStateComponent<KeyPromoterConfiguration> {
+    public class KeyPromoterConfiguration extends BaseConfigurable implements SearchableConfigurable, PersistentStateComponent<KeyPromoterConfiguration> {
 
     JPanel myConfigPanel;
     private JSpinner myDisplayTime;
@@ -49,36 +59,39 @@ public class KeyPromoterConfiguration extends BaseConfigurable implements Search
     private JSpinner myProposeToCreateShortcutCount;
     private JTextPane myPopupTemplate;
 
-    private KeyPromoterSettings mySettings = new KeyPromoterSettings();
+    private final KeyPromoterSettings mySettings = new KeyPromoterSettings();
 
 
     @NotNull
+    @Override
     public String getId() {
         return "KeyPromoterConfiguration";
     }
 
-    public Runnable enableSearch(String s) {
+    @Override
+    public Runnable enableSearch(final String string) {
         return null;
     }
 
+    @Override
     public String getDisplayName() {
         return "KeyPromoter";
     }
 
-    public Icon getIcon() {
-        return null;
-    }
 
     @Nullable
     @NonNls
+    @Override
     public String getHelpTopic() {
         return null;
     }
 
+    @Override
     public JComponent createComponent() {
         return myConfigPanel;
     }
 
+    @Override
     public boolean isModified() {
         if (myMenus.isSelected() != mySettings.isMenusEnabled()) return true;
         if (myToolbarButtons.isSelected() != mySettings.isToolbarButtonsEnabled()) return true;
@@ -96,6 +109,7 @@ public class KeyPromoterConfiguration extends BaseConfigurable implements Search
         return false;
     }
 
+    @Override
     public void apply() throws ConfigurationException {
         mySettings.setMenusEnabled(myMenus.isSelected());
         mySettings.setToolbarButtonsEnabled(myToolbarButtons.isSelected());
@@ -111,6 +125,7 @@ public class KeyPromoterConfiguration extends BaseConfigurable implements Search
         mySettings.setFixedTipPosistion(myFixedTipPosition.isSelected());
     }
 
+    @Override
     public void reset() {
         myMenus.setSelected(mySettings.isMenusEnabled());
         myToolbarButtons.setSelected(mySettings.isToolbarButtonsEnabled());
@@ -126,22 +141,21 @@ public class KeyPromoterConfiguration extends BaseConfigurable implements Search
         myFixedTipPosition.setSelected(mySettings.isFixedTipPosition());
     }
 
+    @Override
     public void disposeUIResources() {
-    }
-
-    public void setSettings(KeyPromoterSettings settings) {
-        mySettings = settings;
     }
 
     public KeyPromoterSettings getSettings() {
         return mySettings;
     }
 
+    @Override
     public KeyPromoterConfiguration getState() {
         return this;
     }
 
-    public void loadState(KeyPromoterConfiguration state) {
+    @Override
+    public void loadState(final KeyPromoterConfiguration state) {
         XmlSerializerUtil.copyBean(state, this);
     }
 

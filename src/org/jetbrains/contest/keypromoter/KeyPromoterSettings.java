@@ -1,6 +1,9 @@
 package org.jetbrains.contest.keypromoter;
 
-import java.awt.*;
+import java.awt.Color;
+
+import com.google.common.base.Objects;
+import com.intellij.ui.JBColor;
 
 /**
  * Settings for KeyPromoter plugin.
@@ -9,11 +12,11 @@ import java.awt.*;
 public class KeyPromoterSettings {
 
     /** Color of text in popup */
-    public Color textColor = Color.BLACK;
+    public Color textColor = JBColor.BLACK;
     /** Color of border of popup */
-    public Color borderColor = Color.RED;
+    public Color borderColor = JBColor.RED;
     /** Background Color of popup */
-    public Color backgroundColor = new Color(0x202040);
+    public Color backgroundColor = new JBColor(0x202040, 0x202040);
 
     /** Whether popup enabled or disabled on menus clicks. */
     public boolean menusEnabled = true;
@@ -50,7 +53,7 @@ public class KeyPromoterSettings {
         return displayTime;
     }
 
-    public void setDisplayTime(long displayTime) {
+    public void setDisplayTime(final long displayTime) {
         this.displayTime = displayTime;
     }
 
@@ -58,7 +61,7 @@ public class KeyPromoterSettings {
         return flashAnimationDelay;
     }
 
-    public void setFlashAnimationDelay(long flashAnimationDelay) {
+    public void setFlashAnimationDelay(final long flashAnimationDelay) {
         this.flashAnimationDelay = flashAnimationDelay;
     }
 
@@ -66,7 +69,7 @@ public class KeyPromoterSettings {
         return menusEnabled;
     }
 
-    public void setMenusEnabled(boolean menusEnabled) {
+    public void setMenusEnabled(final boolean menusEnabled) {
         this.menusEnabled = menusEnabled;
     }
 
@@ -74,7 +77,7 @@ public class KeyPromoterSettings {
         return toolbarButtonsEnabled;
     }
 
-    public void setToolbarButtonsEnabled(boolean toolbarButtonsEnabled) {
+    public void setToolbarButtonsEnabled(final boolean toolbarButtonsEnabled) {
         this.toolbarButtonsEnabled = toolbarButtonsEnabled;
     }
 
@@ -82,7 +85,7 @@ public class KeyPromoterSettings {
         return toolWindowButtonsEnabled;
     }
 
-    public void setToolWindowButtonsEnabled(boolean toolWindowButtonsEnabled) {
+    public void setToolWindowButtonsEnabled(final boolean toolWindowButtonsEnabled) {
         this.toolWindowButtonsEnabled = toolWindowButtonsEnabled;
     }
 
@@ -90,7 +93,7 @@ public class KeyPromoterSettings {
         return allButtonsEnabled;
     }
 
-    public void setAllButtonsEnabled(boolean allButtonsEnabled) {
+    public void setAllButtonsEnabled(final boolean allButtonsEnabled) {
         this.allButtonsEnabled = allButtonsEnabled;
     }
 
@@ -98,7 +101,7 @@ public class KeyPromoterSettings {
         return textColor;
     }
 
-    public void setTextColor(Color textColor) {
+    public void setTextColor(final Color textColor) {
         this.textColor = textColor;
     }
 
@@ -106,7 +109,7 @@ public class KeyPromoterSettings {
         return borderColor;
     }
 
-    public void setBorderColor(Color borderColor) {
+    public void setBorderColor(final Color borderColor) {
         this.borderColor = borderColor;
     }
 
@@ -114,7 +117,7 @@ public class KeyPromoterSettings {
         return backgroundColor;
     }
 
-    public void setBackgroundColor(Color backgroundColor) {
+    public void setBackgroundColor(final Color backgroundColor) {
         this.backgroundColor = backgroundColor;
     }
 
@@ -122,7 +125,7 @@ public class KeyPromoterSettings {
         return this.fixedTipPosistion;
     }
 
-    public void setFixedTipPosistion(boolean fixedTipPosistion) {
+    public void setFixedTipPosistion(final boolean fixedTipPosistion) {
         this.fixedTipPosistion = fixedTipPosistion;
     }
 
@@ -130,7 +133,7 @@ public class KeyPromoterSettings {
         return proposeToCreateShortcutCount;
     }
 
-    public void setProposeToCreateShortcutCount(int proposeToCreateShortcutCount) {
+    public void setProposeToCreateShortcutCount(final int proposeToCreateShortcutCount) {
         this.proposeToCreateShortcutCount = proposeToCreateShortcutCount;
     }
 
@@ -138,49 +141,33 @@ public class KeyPromoterSettings {
         return popupTemplate;
     }
 
-    public void setPopupTemplate(String popupTemplate) {
+    public void setPopupTemplate(final String popupTemplate) {
         this.popupTemplate = popupTemplate;
     }
 
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public boolean equals(final Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
 
-        KeyPromoterSettings that = (KeyPromoterSettings) o;
-
-        if (allButtonsEnabled != that.allButtonsEnabled) return false;
-        if (displayTime != that.displayTime) return false;
-        if (fixedTipPosistion != that.fixedTipPosistion) return false;
-        if (flashAnimationDelay != that.flashAnimationDelay) return false;
-        if (menusEnabled != that.menusEnabled) return false;
-        if (proposeToCreateShortcutCount != that.proposeToCreateShortcutCount) return false;
-        if (toolWindowButtonsEnabled != that.toolWindowButtonsEnabled) return false;
-        if (toolbarButtonsEnabled != that.toolbarButtonsEnabled) return false;
-        if (backgroundColor != null ? !backgroundColor.equals(that.backgroundColor) : that.backgroundColor != null)
-            return false;
-        if (borderColor != null ? !borderColor.equals(that.borderColor) : that.borderColor != null) return false;
-        if (popupTemplate != null ? !popupTemplate.equals(that.popupTemplate) : that.popupTemplate != null)
-            return false;
-        if (textColor != null ? !textColor.equals(that.textColor) : that.textColor != null) return false;
-
-        return true;
+        final KeyPromoterSettings that = (KeyPromoterSettings) obj;
+        return Objects.equal(allButtonsEnabled, that.allButtonsEnabled)
+                && Objects.equal(displayTime, that.displayTime)
+                && Objects.equal(fixedTipPosistion, that.fixedTipPosistion)
+                && Objects.equal(flashAnimationDelay, that.flashAnimationDelay)
+                && Objects.equal(menusEnabled, that.menusEnabled)
+                && Objects.equal(proposeToCreateShortcutCount, that.proposeToCreateShortcutCount)
+                && Objects.equal(toolWindowButtonsEnabled, that.toolWindowButtonsEnabled)
+                && Objects.equal(toolbarButtonsEnabled, that.toolbarButtonsEnabled)
+                && Objects.equal(backgroundColor, that.backgroundColor)
+                && Objects.equal(borderColor, that.borderColor)
+                && Objects.equal(popupTemplate, that.popupTemplate)
+                && Objects.equal(textColor, that.textColor);
     }
 
     public int hashCode() {
-        int result;
-        result = (textColor != null ? textColor.hashCode() : 0);
-        result = 31 * result + (borderColor != null ? borderColor.hashCode() : 0);
-        result = 31 * result + (backgroundColor != null ? backgroundColor.hashCode() : 0);
-        result = 31 * result + (menusEnabled ? 1 : 0);
-        result = 31 * result + (toolbarButtonsEnabled ? 1 : 0);
-        result = 31 * result + (toolWindowButtonsEnabled ? 1 : 0);
-        result = 31 * result + (allButtonsEnabled ? 1 : 0);
-        result = 31 * result + (int) (displayTime ^ (displayTime >>> 32));
-        result = 31 * result + (int) (flashAnimationDelay ^ (flashAnimationDelay >>> 32));
-        result = 31 * result + proposeToCreateShortcutCount;
-        result = 31 * result + (fixedTipPosistion ? 1 : 0);
-        result = 31 * result + (popupTemplate != null ? popupTemplate.hashCode() : 0);
-        return result;
+        return Objects.hashCode(textColor, borderColor, backgroundColor, menusEnabled, toolbarButtonsEnabled,
+                toolWindowButtonsEnabled, allButtonsEnabled, displayTime, flashAnimationDelay,
+                proposeToCreateShortcutCount, fixedTipPosistion, popupTemplate);
     }
 }
